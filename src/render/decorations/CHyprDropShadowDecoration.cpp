@@ -78,7 +78,8 @@ void CHyprDropShadowDecoration::damageEntire() {
 
 void CHyprDropShadowDecoration::updateWindow(PHLWINDOW pWindow) {
     const auto PWINDOW = m_pWindow.lock();
-
+    // draw the shadow`
+    wlr_box fullBox = {m_vLastWindowPos.x - *PSHADOWSIZE - (*PBORDERSIZE), m_vLastWindowPos.y - *PSHADOWSIZE, m_vLastWindowSize.x + 2.0 * *PSHADOWSIZE + (2.0 * *PBORDERSIZE), m_vLastWindowSize.y + 2.0 * *PSHADOWSIZE};
     m_vLastWindowPos  = PWINDOW->m_vRealPosition.value();
     m_vLastWindowSize = PWINDOW->m_vRealSize.value();
 
@@ -95,6 +96,9 @@ void CHyprDropShadowDecoration::draw(CMonitor* pMonitor, float a) {
 
     if (PWINDOW->m_cRealShadowColor.value() == CColor(0, 0, 0, 0))
         return; // don't draw invisible shadows
+    else {
+        fullBox.x += ((m_vLastWindowSize.x + 2.0 * *PSHADOWSIZE + (2.0 * *PBORDERSIZE)) - NEWSIZE.x) / 2.0;
+    }
 
     if (!PWINDOW->m_sSpecialRenderData.decorate)
         return;
@@ -145,6 +149,8 @@ void CHyprDropShadowDecoration::draw(CMonitor* pMonitor, float a) {
 
     g_pHyprOpenGL->scissor((CBox*)nullptr);
 
+    scaleBox(&fullBox, pMonitor->scale);
+    g_pHyprOpenGL->renderRoundedShadow(&fullBox, (ROUNDING + 3) * pMonitor->scale, *PSHADOWSIZE * pMonitor->scale, a);
     // we'll take the liberty of using this as it should not be used rn
     CFramebuffer& alphaFB     = g_pHyprOpenGL->m_RenderData.pCurrentMonData->mirrorFB;
     CFramebuffer& alphaSwapFB = g_pHyprOpenGL->m_RenderData.pCurrentMonData->mirrorSwapFB;
